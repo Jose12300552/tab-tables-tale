@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChefHat, ClipboardList, Utensils, Package, ShoppingCart } from "lucide-react";
+import { ChefHat, ClipboardList, Utensils, Package, CalendarDays, BarChart3 } from "lucide-react";
 import KitchenView from "@/components/KitchenView";
 import OrdersView from "@/components/OrdersView";
 import TablesView from "@/components/TablesView";
 import InventoryView from "@/components/InventoryView";
-import ExtraProductsView from "@/components/ExtraProductsView";
+import ReservationsView from "@/components/ReservationsView";
+import ReportsView from "@/components/ReportsView";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("kitchen");
@@ -17,11 +18,11 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-                <ChefHat className="h-7 w-7 text-primary-foreground" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white">
+                <img src="/src/assets/quinta-estacion-logo.png.png" alt="Quinta Estación" className="h-12 w-12 object-contain" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Kitchen Flow</h1>
+                <h1 className="text-2xl font-bold text-foreground">Quinta Estación</h1>
                 <p className="text-sm text-muted-foreground">Sistema de Gestión de Restaurante</p>
               </div>
             </div>
@@ -32,7 +33,7 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5 mb-6">
+          <TabsList className="grid w-full max-w-5xl grid-cols-6 mb-6">
             <TabsTrigger value="kitchen" className="flex items-center gap-2">
               <ChefHat className="h-4 w-4" />
               <span className="hidden sm:inline">Cocina</span>
@@ -49,9 +50,13 @@ const Index = () => {
               <Package className="h-4 w-4" />
               <span className="hidden sm:inline">Inventario</span>
             </TabsTrigger>
-            <TabsTrigger value="extras" className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              <span className="hidden sm:inline">Extras</span>
+            <TabsTrigger value="reservations" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline">Reservas</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Reportes</span>
             </TabsTrigger>
           </TabsList>
 
@@ -71,8 +76,12 @@ const Index = () => {
             <InventoryView />
           </TabsContent>
 
-          <TabsContent value="extras" className="mt-0">
-            <ExtraProductsView />
+          <TabsContent value="reservations" className="mt-0">
+            <ReservationsView />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-0">
+            <ReportsView />
           </TabsContent>
         </Tabs>
       </main>

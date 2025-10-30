@@ -21,25 +21,12 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  minStock: number;
-  category: string;
-}
+import { useRestaurant, InventoryItem } from "@/contexts/RestaurantContext";
 
 const InventoryView = () => {
   const { toast } = useToast();
-  const [items, setItems] = useState<InventoryItem[]>([
-    { id: "1", name: "Tomate", quantity: 50, unit: "kg", minStock: 10, category: "Verduras" },
-    { id: "2", name: "Pollo", quantity: 25, unit: "kg", minStock: 5, category: "Carnes" },
-    { id: "3", name: "Arroz", quantity: 100, unit: "kg", minStock: 20, category: "Granos" },
-    { id: "4", name: "Aceite", quantity: 15, unit: "L", minStock: 5, category: "Aceites" },
-  ]);
-
+  const { inventory, updateInventory } = useRestaurant();
+  
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -49,9 +36,19 @@ const InventoryView = () => {
     unit: "",
     minStock: "",
     category: "",
+    price: "",
   });
 
   const handleAdd = () => {
+    if (!formData.name || !formData.quantity || !formData.price) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newItem: InventoryItem = {
       id: Date.now().toString(),
       name: formData.name,
@@ -59,9 +56,10 @@ const InventoryView = () => {
       unit: formData.unit,
       minStock: Number(formData.minStock),
       category: formData.category,
+      price: Number(formData.price),
     };
-    setItems([...items, newItem]);
-    setFormData({ name: "", quantity: "", unit: "", minStock: "", category: "" });
+    updateInventory([...inventory, newItem]);
+    setFormData({ name: "", quantity: "", unit: "", minStock: "", category: "", price: "" });
     setIsAddDialogOpen(false);
     toast({
       title: "Item añadido",
@@ -71,8 +69,18 @@ const InventoryView = () => {
 
   const handleEdit = () => {
     if (!editingItem) return;
-    setItems(
-      items.map((item) =>
+    
+    if (!formData.name || !formData.quantity || !formData.price) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateInventory(
+      inventory.map((item) =>
         item.id === editingItem.id
           ? {
               ...item,
@@ -81,13 +89,14 @@ const InventoryView = () => {
               unit: formData.unit,
               minStock: Number(formData.minStock),
               category: formData.category,
+              price: Number(formData.price),
             }
           : item
       )
     );
     setIsEditDialogOpen(false);
     setEditingItem(null);
-    setFormData({ name: "", quantity: "", unit: "", minStock: "", category: "" });
+    setFormData({ name: "", quantity: "", unit: "", minStock: "", category: "", price: "" });
     toast({
       title: "Item actualizado",
       description: "El item ha sido actualizado correctamente.",
@@ -102,12 +111,13 @@ const InventoryView = () => {
       unit: item.unit,
       minStock: item.minStock.toString(),
       category: item.category,
+      price: item.price.toString(),
     });
     setIsEditDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+    updateInventory(inventory.filter((item) => item.id !== id));
     toast({
       title: "Item eliminado",
       description: "El item ha sido eliminado del inventario.",
@@ -115,7 +125,7 @@ const InventoryView = () => {
     });
   };
 
-  const lowStockItems = items.filter((item) => item.quantity <= item.minStock);
+  const lowStockItems = inventory.filter((item) => item.quantity <= item.minStock);
 
   return (
     <div className="space-y-6">
@@ -137,17 +147,17 @@ const InventoryView = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Nombre</Label>
+                <Label htmlFor="name">Nombre *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ej: Tomate"
+                  placeholder="Ej: Hamburguesa"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="quantity">Cantidad</Label>
+                  <Label htmlFor="quantity">Cantidad *</Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -166,15 +176,28 @@ const InventoryView = () => {
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="minStock">Stock Mínimo</Label>
-                <Input
-                  id="minStock"
-                  type="number"
-                  value={formData.minStock}
-                  onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
-                  placeholder="0"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="minStock">Stock Mínimo</Label>
+                  <Input
+                    id="minStock"
+                    type="number"
+                    value={formData.minStock}
+                    onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="price">Precio ($) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="category">Categoría</Label>
@@ -182,7 +205,7 @@ const InventoryView = () => {
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="Verduras, Carnes, etc."
+                  placeholder="Comida, Bebidas, etc."
                 />
               </div>
             </div>
@@ -218,6 +241,7 @@ const InventoryView = () => {
                 <TableHead>Nombre</TableHead>
                 <TableHead>Cantidad</TableHead>
                 <TableHead>Unidad</TableHead>
+                <TableHead>Precio</TableHead>
                 <TableHead>Stock Mínimo</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Estado</TableHead>
@@ -225,11 +249,12 @@ const InventoryView = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {inventory.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>{item.unit}</TableCell>
+                  <TableCell>${item.price.toFixed(2)}</TableCell>
                   <TableCell>{item.minStock}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>
@@ -271,7 +296,7 @@ const InventoryView = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-name">Nombre</Label>
+              <Label htmlFor="edit-name">Nombre *</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -280,7 +305,7 @@ const InventoryView = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-quantity">Cantidad</Label>
+                <Label htmlFor="edit-quantity">Cantidad *</Label>
                 <Input
                   id="edit-quantity"
                   type="number"
@@ -297,14 +322,26 @@ const InventoryView = () => {
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="edit-minStock">Stock Mínimo</Label>
-              <Input
-                id="edit-minStock"
-                type="number"
-                value={formData.minStock}
-                onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-minStock">Stock Mínimo</Label>
+                <Input
+                  id="edit-minStock"
+                  type="number"
+                  value={formData.minStock}
+                  onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-price">Precio ($) *</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="edit-category">Categoría</Label>
